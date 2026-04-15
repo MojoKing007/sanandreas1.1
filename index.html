@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>GTA San Andreas</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Cormorant+Garamond:ital,wght@1,700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            overflow: hidden;
+            touch-action: manipulation;
+        }
+
+        :root {
+            --glass: rgba(255, 255, 255, 0.06);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --glass-active: rgba(255, 255, 255, 0.16);
+            --white-80: rgba(255, 255, 255, 0.8);
+            --white-60: rgba(255, 255, 255, 0.6);
+            --white-30: rgba(255, 255, 255, 0.3);
+            --white-15: rgba(255, 255, 255, 0.15);
+            --white-08: rgba(255, 255, 255, 0.08);
+            --mono: 'JetBrains Mono', monospace;
+            --display: 'Bebas Neue', sans-serif;
+            --serif: 'Cormorant Garamond', Georgia, serif;
+        }
+
+        #sa-root {
+            width: 100%;
+            height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            background: #000;
+            position: relative;
+            overflow: hidden;
+            font-family: var(--mono);
+            user-select: none;
+        }
+
+        /* ── TOP BAR ── */
+        #rockstar-top {
+            position: relative;
+            z-index: 20;
+            width: 100%;
+            text-align: center;
+            padding: max(env(safe-area-inset-top, 0px), 10px) 16px 6px;
+            font-family: var(--mono);
+            font-size: 9px;
+            letter-spacing: 5px;
+            color: var(--white-30);
+            text-transform: uppercase;
+        }
+
+        /* ── SLIDESHOW ── */
+        #slideshow {
+            position: relative;
+            z-index: 5;
+            width: 100%;
+            flex: 1;
+            background: #080808;
+            overflow: hidden;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: stretch;
+            opacity: 0;
+            transition: opacity 1s ease;
+            pointer-events: none;
+        }
+
+        .slide.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .panel {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            background: #0a0a0a;
+            border-right: 1px solid rgba(255, 255, 255, 0.04);
+        }
+
+        .panel:last-child {
+            border-right: none;
+        }
+
+        .panel-mid {
+            flex: 2.2;
+        }
+
+        .pimg {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center top;
+            display: block;
+            filter: grayscale(100%) contrast(1.1) brightness(0.85);
+        }
+
+        .pph {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 8px;
+            background: #080808;
+        }
+
+        .pph::before {
+            content: '';
+            width: 28px;
+            height: 28px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            display: block;
+        }
+
+        .pph span {
+            font-family: var(--mono);
+            font-size: 8px;
+            color: rgba(255, 255, 255, 0.12);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            text-align: center;
+            padding: 0 6px;
+        }
+
+        /* vignette sides */
+        #slideshow::before,
+        #slideshow::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 40px;
+            z-index: 15;
+            pointer-events: none;
+        }
+
+        #slideshow::before {
+            left: 0;
+            background: linear-gradient(90deg, rgba(0, 0, 0, 0.65), transparent);
+        }
+
+        #slideshow::after {
+            right: 0;
+            background: linear-gradient(-90deg, rgba(0, 0, 0, 0.65), transparent);
+        }
+
+        /* ── LOGO ── */
+        #logo-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 20;
+            pointer-events: none;
+            text-align: center;
+        }
+
+        .logo-grand,
+        .logo-theft,
+        .logo-auto {
+            font-family: var(--display);
+            font-size: clamp(30px, 8.5vw, 60px);
+            color: #fff;
+            line-height: 0.88;
+            letter-spacing: 3px;
+            text-shadow: 0 2px 32px rgba(0, 0, 0, 1), 0 0 2px rgba(0, 0, 0, 1);
+        }
+
+        .logo-sa {
+            font-family: var(--serif);
+            font-size: clamp(13px, 4vw, 22px);
+            font-weight: 700;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.65);
+            letter-spacing: 5px;
+            margin-top: 4px;
+            text-shadow: 0 1px 12px rgba(0, 0, 0, 0.9);
+            text-transform: uppercase;
+        }
+
+        /* ── DOTS ── */
+        #slide-dots {
+            position: absolute;
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 6px;
+            z-index: 30;
+        }
+
+        .dot {
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--white-15);
+            transition: all 0.35s;
+            cursor: pointer;
+            padding: 12px;
+            margin: -12px;
+            position: relative;
+        }
+
+        .dot::after {
+            content: '';
+            position: absolute;
+            width: 5px;
+            height: 5px;
+            border-radius: 50%;
+            background: var(--white-15);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            transition: all 0.35s;
+        }
+
+        .dot.active::after {
+            background: #fff;
+        }
+
+        /* ── GLASS HUD ── */
+        #bottom-area {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(30px) saturate(1.1);
+            -webkit-backdrop-filter: blur(30px) saturate(1.1);
+            border-top: 0.5px solid var(--glass-border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 14px 14px max(env(safe-area-inset-bottom, 0px), 14px);
+            gap: 10px;
+        }
+
+        #bottom-area::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 20px;
+            right: 20px;
+            height: 0.5px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+        }
+
+        /* ── CONTROLS ── */
+        #controls-row {
+            display: flex;
+            width: 100%;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        /* PILL BUTTONS */
+        .sa-btn {
+            height: 46px;
+            background: var(--glass);
+            border: 0.5px solid var(--glass-border);
+            border-radius: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: background 0.12s, transform 0.08s;
+            padding: 0 18px;
+            gap: 7px;
+            white-space: nowrap;
+        }
+
+        .sa-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent);
+            pointer-events: none;
+            border-radius: 100px 100px 0 0;
+        }
+
+        .sa-btn:active {
+            transform: scale(0.93);
+            background: var(--glass-active);
+        }
+
+        .btn-label {
+            font-family: var(--mono);
+            font-size: 10px;
+            color: var(--white-60);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .play-icon {
+            width: 0;
+            height: 0;
+            border-top: 7px solid transparent;
+            border-bottom: 7px solid transparent;
+            border-left: 12px solid var(--white-80);
+            margin-left: 2px;
+            flex-shrink: 0;
+        }
+
+        .pause-wrap {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+
+        .pause-bar {
+            width: 4px;
+            height: 13px;
+            background: var(--white-80);
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        /* START BUTTON — solid white pill */
+        #start-btn {
+            flex: 1;
+            max-width: 190px;
+            height: 46px;
+            background: rgba(255, 255, 255, 0.92);
+            border: none;
+            border-radius: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: background 0.12s, transform 0.08s;
+        }
+
+        #start-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 50%;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.35), transparent);
+            pointer-events: none;
+            border-radius: 100px 100px 0 0;
+        }
+
+        #start-btn:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.75);
+        }
+
+        #start-label {
+            font-family: var(--display);
+            font-size: 17px;
+            letter-spacing: 4px;
+            color: #000;
+            text-transform: uppercase;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* UPLOAD PILLS */
+        #upload-row {
+            display: flex;
+            width: 100%;
+            gap: 6px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .upload-btn {
+            height: 32px;
+            background: var(--glass);
+            border: 0.5px solid var(--glass-border);
+            border-radius: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            padding: 0 12px;
+            font-family: var(--mono);
+            font-size: 9px;
+            color: var(--white-30);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            white-space: nowrap;
+            transition: background 0.12s, color 0.12s;
+        }
+
+        .upload-btn:active {
+            background: var(--glass-active);
+            color: var(--white-60);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* NOW PLAYING */
+        #now-playing-row {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .hud-dot {
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            flex-shrink: 0;
+        }
+
+        #now-playing {
+            font-family: var(--mono);
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.18);
+            letter-spacing: 1px;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            transition: color 0.3s;
+            text-align: center;
+        }
+
+        #now-playing.active {
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        /* LOADING BAR */
+        #loading-bar-wrap {
+            width: 100%;
+        }
+
+        .lbar-bg {
+            width: 100%;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+            position: relative;
+        }
+
+        .lbar-fill {
+            height: 100%;
+            width: 0%;
+            background: rgba(255, 255, 255, 0.7);
+            transition: width 0.15s ease;
+            position: relative;
+        }
+
+        .lbar-fill::after {
+            content: '';
+            position: absolute;
+            right: -1px;
+            top: -1.5px;
+            width: 3px;
+            height: 4px;
+            background: #fff;
+            border-radius: 1px;
+            box-shadow: 0 0 5px #fff;
+        }
+
+        .lbar-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 6px;
+        }
+
+        .lbar-status {
+            font-family: var(--mono);
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.18);
+            letter-spacing: 1px;
+        }
+
+        .lbar-pct {
+            font-family: var(--mono);
+            font-size: 9px;
+            color: rgba(255, 255, 255, 0.38);
+            letter-spacing: 1px;
+        }
+
+        @keyframes glow-pulse {
+
+            0%,
+            100% {
+                opacity: 0.7;
+            }
+
+            50% {
+                opacity: 1;
+                box-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+            }
+        }
+
+        .lbar-fill.complete {
+            animation: glow-pulse 1.2s ease-in-out infinite;
+        }
+
+        @keyframes ring-pulse {
+
+            0%,
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+            }
+
+            50% {
+                box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.07);
+            }
+        }
+
+        .sa-btn.playing {
+            animation: ring-pulse 2s ease-in-out infinite;
+        }
+
+        @media (orientation: landscape) and (max-height: 500px) {
+            #bottom-area {
+                padding: 8px 14px max(env(safe-area-inset-bottom, 0px), 8px);
+                gap: 7px;
+            }
+
+            .sa-btn,
+            #start-btn {
+                height: 40px;
+            }
+        }
+
+        #video-overlay {
+            position: fixed;
+            inset: 0;
+            background: black;
+            display: none;
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #intro-video {
+            width: 100vw;
+            height: 100vh;
+            object-fit: cover;
+        }
+    </style>
+</head>
+
+<body>
+    <h2 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">GTA San Andreas loading screen
+    </h2>
+    <div id="sa-root">
+
+        <div id="rockstar-top">Rockstar Games Presents</div>
+
+        <div id="slideshow">
+            <div class="slide active" id="slide-0">
+                <div class="panel">
+                    <img class="pimg" src="img/1.jpg" alt=""
+                        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                    <div class="pph" style="display:none"><span>slide1-left.jpg</span></div>
+                </div>
+                <div class="panel panel-mid">
+                    <img class="pimg" src="img/4.png" alt=""
+                        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                    <div class="pph" style="display:none"><span>slide1-center.jpg</span></div>
+                    <div id="logo-overlay">
+                        <div class="logo-grand"></div>
+                        <div class="logo-theft"></div>
+                        <div class="logo-auto"></div>
+                        <div class="logo-sa"></div>
+                    </div>
+                </div>
+                <div class="panel">
+                    <img class="pimg" src="img/2.jpg" alt=""
+                        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                    <div class="pph" style="display:none"><span>slide1-right.jpg</span></div>
+                </div>
+            </div>
+
+            <div class="slide" id="slide-1">
+                <div class="panel">
+                    <img class="pimg" src="img/3.jpg" alt=""
+                        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                    <div class="pph" style="display:none"><span>slide2-left.jpg</span></div>
+                </div>
+                <div class="panel panel-mid">
+                    <img class="pimg" src="img/6.jpg" alt=""
+                        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                    <div class="pph" style="display:none"><span>slide2-center.jpg</span></div>
+                </div>
+                <div class="panel">
+                    <img class="pimg" src="img/5.jpg" alt=""
+                        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                    <div class="pph" style="display:none"><span>slide2-right.jpg</span></div>
+                </div>
+            </div>
+
+            <div class="slide" id="slide-2">
+                <div class="panel">
+                    <img class="pimg" src="img/7.jpg" alt=""
+                        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                    <div class="pph" style="display:none"><span>slide3-left.jpg</span></div>
+                </div>
+                <div class="panel panel-mid">
+                    <img class="pimg" src="img/8.jpg" alt=""
+                        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                    <div class="pph" style="display:none"><span>slide3-center.jpg</span></div>
+                </div>
+                <div class="panel">
+                    <img class="pimg" src="img/9.jpg" alt=""
+                        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                    <div class="pph" style="display:none"><span>slide3-right.jpg</span></div>
+                </div>
+            </div>
+
+            <div id="slide-dots">
+                <div class="dot active" data-idx="0"></div>
+                <div class="dot" data-idx="1"></div>
+                <div class="dot" data-idx="2"></div>
+            </div>
+        </div>
+
+        <div id="bottom-area">
+            <div id="controls-row">
+                <div class="sa-btn" id="play-btn" role="button" aria-label="Play/Pause">
+                    <div id="play-icon" class="play-icon"></div>
+                    <span class="btn-label" id="play-label">Play</span>
+                </div>
+                <div id="start-btn" role="button" aria-label="Start Game">
+                    <span id="start-label">Start Game</span>
+                </div>
+                <div class="sa-btn" id="music-btn" role="button" aria-label="Toggle music">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="opacity:0.7;flex-shrink:0">
+                        <path d="M9 18V5l12-2v13" stroke="rgba(255,255,255,0.9)" stroke-width="1.5"
+                            stroke-linecap="round" stroke-linejoin="round" />
+                        <circle cx="6" cy="18" r="3" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" />
+                        <circle cx="18" cy="16" r="3" stroke="rgba(255,255,255,0.9)" stroke-width="1.5" />
+                    </svg>
+                    <span class="btn-label">Music</span>
+                </div>
+            </div>
+
+            <div id="now-playing-row">
+                <div class="hud-dot"></div>
+                <div id="now-playing">no music loaded</div>
+                <div class="hud-dot"></div>
+            </div>
+
+            <div id="upload-row">
+                <label class="upload-btn" for="music-file">+ music</label>
+                <input type="file" id="music-file" accept="audio/*">
+                <label class="upload-btn" for="img-s0">+ slide 1</label>
+                <input type="file" id="img-s0" accept="image/*" multiple>
+                <label class="upload-btn" for="img-s1">+ slide 2</label>
+                <input type="file" id="img-s1" accept="image/*" multiple>
+                <label class="upload-btn" for="img-s2">+ slide 3</label>
+                <input type="file" id="img-s2" accept="image/*" multiple>
+            </div>
+
+            <div id="loading-bar-wrap">
+                <div class="lbar-bg">
+                    <div class="lbar-fill" id="lbar"></div>
+                </div>
+                <div class="lbar-labels">
+                    <span class="lbar-status" id="lbar-status">Loading...</span>
+                    <span class="lbar-pct" id="lbar-pct">0%</span>
+                </div>
+            </div>
+        </div>
+
+
+
+
+
+    </div>
+
+    <div id="video-overlay">
+        <video id="intro-video" playsinline>
+            <source src="https://res.cloudinary.com/dotht6y4b/video/upload/v1776242755/intro_cezjnn.mp4"
+                type="video/mp4">
+        </video>
+    </div>
+    <script>
+        (function () {
+            const slides = document.querySelectorAll('.slide');
+            const dots = document.querySelectorAll('.dot');
+            let cur = 0, timer = null, playing = true;
+
+            function goTo(n) {
+                slides[cur].classList.remove('active'); dots[cur].classList.remove('active');
+                cur = (n + slides.length) % slides.length;
+                slides[cur].classList.add('active'); dots[cur].classList.add('active');
+            }
+            function startAuto() { if (timer) clearInterval(timer); timer = setInterval(() => goTo(cur + 1), 4000); }
+            function stopAuto() { if (timer) { clearInterval(timer); timer = null; } }
+            startAuto();
+
+            document.getElementById('play-btn').addEventListener('click', function () {
+                playing = !playing;
+                playing ? startAuto() : stopAuto();
+                const iconEl = document.getElementById('play-icon');
+                const lbl = document.getElementById('play-label');
+                if (playing) {
+                    iconEl.className = 'play-icon'; iconEl.innerHTML = ''; lbl.textContent = 'Play';
+                } else {
+                    iconEl.className = 'pause-wrap';
+                    iconEl.innerHTML = '<div class="pause-bar"></div><div class="pause-bar"></div>';
+                    lbl.textContent = 'Pause';
+                }
+            });
+
+            dots.forEach(d => d.addEventListener('click', function () {
+                goTo(parseInt(this.dataset.idx)); if (playing) startAuto();
+            }));
+
+            let tx = null;
+            const ss = document.getElementById('slideshow');
+            ss.addEventListener('touchstart', e => { tx = e.touches[0].clientX; }, { passive: true });
+            ss.addEventListener('touchend', e => {
+                if (tx === null) return;
+                const dx = e.changedTouches[0].clientX - tx;
+                if (Math.abs(dx) > 42) { goTo(cur + (dx < 0 ? 1 : -1)); if (playing) startAuto(); }
+                tx = null;
+            }, { passive: true });
+
+            const audio = new Audio("music/1.mp3");
+            audio.loop = true;
+            audio.volume = 0.6;
+            let musicOn = false;
+            const np = document.getElementById('now-playing');
+            const mb = document.getElementById('music-btn');
+
+            document.getElementById('music-file').addEventListener('change', function (e) {
+                const f = e.target.files[0]; if (!f) return;
+                audio.src = URL.createObjectURL(f);
+                audio.play().then(() => {
+                    musicOn = true; np.textContent = f.name; np.classList.add('active'); mb.classList.add('playing');
+                }).catch(() => { });
+            });
+
+            mb.addEventListener('click', function () {
+                if (!audio.src) { np.textContent = 'load a file first'; return; }
+                if (musicOn) { audio.pause(); musicOn = false; np.classList.remove('active'); mb.classList.remove('playing'); }
+                else { audio.play(); musicOn = true; np.classList.add('active'); mb.classList.add('playing'); }
+            });
+
+            ['s0', 's1', 's2'].forEach((sid, si) => {
+                document.getElementById('img-' + sid).addEventListener('change', function (e) {
+                    const files = Array.from(e.target.files);
+                    const imgs = document.querySelectorAll('#slide-' + si + ' .pimg');
+                    const phs = document.querySelectorAll('#slide-' + si + ' .pph');
+                    files.slice(0, 3).forEach((f, i) => {
+                        if (!imgs[i]) return;
+                        imgs[i].src = URL.createObjectURL(f); imgs[i].style.display = 'block';
+                        if (phs[i]) phs[i].style.display = 'none';
+                    });
+                });
+            });
+
+            const bar = document.getElementById('lbar'), pctEl = document.getElementById('lbar-pct'), statusEl = document.getElementById('lbar-status');
+            const statuses = ["Loading world...", "Spawning peds...", "Loading textures...", "Building city...", "Placing vehicles...", "Almost there...", "Done."];
+            let pct = 0;
+            function tick() {
+                if (pct >= 100) { statusEl.textContent = "Press start to play"; pctEl.textContent = "100%"; bar.style.width = "100%"; bar.classList.add('complete'); return; }
+                pct = Math.min(100, pct + Math.random() * 2.2 + 0.5);
+                bar.style.width = pct + '%'; pctEl.textContent = Math.floor(pct) + '%';
+                statusEl.textContent = statuses[Math.min(Math.floor(pct / 16), statuses.length - 1)];
+                setTimeout(tick, 110 + Math.random() * 160);
+            }
+            setTimeout(tick, 600);
+
+            const videoOverlay = document.getElementById('video-overlay');
+            const video = document.getElementById('intro-video');
+
+            document.getElementById('start-btn').addEventListener('click', function () {
+                statusEl.textContent = 'Starting game...';
+
+                videoOverlay.style.display = 'flex';
+
+                video.currentTime = 0;
+                video.play().then(() => {
+                    if (video.requestFullscreen) {
+                        video.requestFullscreen();
+                    } else if (video.webkitEnterFullscreen) {
+                        video.webkitEnterFullscreen(); // 🔥 iPhone fix
+                    }
+                }).catch(() => { });
+
+                // Try forcing landscape (mobile)
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(() => { });
+                }
+            });
+
+            video.addEventListener('ended', () => {
+                videoOverlay.style.display = 'none';
+
+                if (screen.orientation && screen.orientation.unlock) {
+                    screen.orientation.unlock();
+                }
+            });
+        })();
+    </script>
+</body>
+
+</html>
